@@ -73,6 +73,25 @@ const deleteMembersRecordQuery = `
 	      segment_id IN (SELECT id FROM segments WHERE slug = :slug) 
 `
 
+const saveExpiredMembersHistoryQuery = `
+	INSERT INTO test_members_history(user_id, slug, status, happened_at)
+	SELECT user_id, slug, 'DELETED', tm.expires_at
+	FROM test_members tm
+	INNER JOIN segments sg ON  sg.id = tm.segment_id
+	WHERE expires_at > now()
+`
+
+const deleteExpiredMembersHistoryQuery = `
+	DELETE FROM test_members
+	WHERE expires_at > now()
+`
+
+const getMembersMonthHistoryQuery = `
+	SELECT user_id, slug, status, happened_at
+	FROM test_members_history
+	WHERE extract(year from happened_at) = $1 AND extract(month from happened_at) = $2
+`
+
 func (u *UserPostgres) GetSegments(userId string) (model.UserSegments, error) {
 	segments := model.UserSegments{Slugs: []string{}}
 	err := u.db.Select(&segments.Slugs, selectActiveUserSegmentsQuery, userId)
@@ -83,9 +102,38 @@ func (u *UserPostgres) GetSegments(userId string) (model.UserSegments, error) {
 	return segments, nil
 }
 
-func (u *UserPostgres) GetSegmentsHistory() ([]model.MemberEvent, error) {
-	//TODO implement me
-	panic("implement me")
+func (u *UserPostgres) GetSegmentsHistory(year, month int) ([]model.MemberEvent, error) {
+	tx, err := u.db.Beginx()
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	// Сохраняем истекших участников
+	_, err = tx.Exec(saveExpiredMembersHistoryQuery)
+	if err != nil {
+		return nil, err
+	}
+
+	// Удаляем истекших участников
+	_, err = tx.Exec(deleteExpiredMembersHistoryQuery)
+	if err != nil {
+		return nil, err
+	}
+
+	// Получаем историю за определенные период
+	events := make([]model.MemberEvent, 0)
+	err = tx.Select(&events, getMembersMonthHistoryQuery, year, month)
+	if err != nil {
+		return nil, err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return nil, err
+	}
+
+	return events, nil
 }
 
 func (u *UserPostgres) UpdateSegments(userId string, segmentsToAdd []model.SegmentToAdd, slugsToDelete []string) error {

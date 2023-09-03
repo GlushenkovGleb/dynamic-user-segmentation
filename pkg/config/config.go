@@ -11,9 +11,9 @@ import (
 const configPath = "config/local.yaml"
 
 type Config struct {
-	Env         string `yaml:"env" env-default:"local"`
-	StoragePath string `yaml:"storage-path" env-required:"true"`
-	HTTPServer  `yaml:"http-server"`
+	Env             string `yaml:"env" env-default:"local"`
+	FileStoragePath string `yaml:"file-storage-path" env-required:"true"`
+	HTTPServer      `yaml:"http-server"`
 }
 
 type HTTPServer struct {
@@ -26,13 +26,13 @@ func MustLoad() Config {
 	// check if file exists
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		fmt.Println()
-		log.Fatalf("config file does not exists: %s", configPath)
+		log.Fatalf("Config file does not exists: %s", configPath)
 	}
 
 	var cfg Config
 
 	if err := cleanenv.ReadConfig(configPath, &cfg); err != nil {
-		log.Fatalf("cannot read config: %s", err)
+		log.Fatalf("Unable to read config: %s", err)
 	}
 	return cfg
 }

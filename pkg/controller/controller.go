@@ -19,11 +19,14 @@ func (c *Controller) InitRoutes(r *chi.Mux) {
 	r.Route("/api/public/v1", func(r chi.Router) {
 		// пользователи
 		r.Get("/users/{user_id}/segments", c.getUserSegments)
-		//r.Get(/history) -- TODO: think about history
+		r.Get("/users/history/{year}-{month}", c.getSegmentsHistory)
 		r.Put("/users/{user_id}/segments", c.updateUserSegments)
 
 		// сегменты
 		r.Post("/segments", c.createSegment)
 		r.Delete("/segments/{slug}", c.deleteSegment)
+
+		// история
+		r.Get("/history/files/{file_name}", c.uploadHistory)
 	})
 }

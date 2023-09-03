@@ -6,15 +6,16 @@ import (
 )
 
 type UserService struct {
-	repos repository.User
+	userRep    repository.User
+	historyRep repository.History
 }
 
-func NewUserService(repos repository.User) *UserService {
-	return &UserService{repos: repos}
+func NewUserService(userRep repository.User, historyRep repository.History) *UserService {
+	return &UserService{userRep: userRep, historyRep: historyRep}
 }
 
 func (u *UserService) GetSegments(userId string) (model.UserSegments, error) {
-	segments, err := u.repos.GetSegments(userId)
+	segments, err := u.userRep.GetSegments(userId)
 	if err != nil {
 		return segments, err
 	}
@@ -22,16 +23,23 @@ func (u *UserService) GetSegments(userId string) (model.UserSegments, error) {
 	return segments, nil
 }
 
-func (u *UserService) GetSegmentsHistory() ([]model.MemberEvent, error) {
-	//TODO implement me
-	panic("implement me")
+func (u *UserService) GetSegmentsHistory(year, month int) (string, error) {
+	events, err := u.userRep.GetSegmentsHistory(year, month)
+	if err != nil {
+		return "", err
+	}
+
+	fileName, err := u.historyRep.SaveEvents(events)
+	if err != nil {
+		return "", err
+	}
+	return fileName, nil
 }
 
 func (u *UserService) UpdateSegments(userId string, segmentsToAdd []model.SegmentToAdd, slugsToDelete []string) error {
-	err := u.repos.UpdateSegments(userId, segmentsToAdd, slugsToDelete)
+	err := u.userRep.UpdateSegments(userId, segmentsToAdd, slugsToDelete)
 	if err != nil {
 		return err
 	}
-
 	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"dynamic-user-segmentation/pkg/model"
 	"errors"
 	"github.com/jmoiron/sqlx"
+	"io"
 )
 
 var (
@@ -16,8 +17,13 @@ var (
 
 type User interface {
 	GetSegments(userId string) (model.UserSegments, error)
-	GetSegmentsHistory() ([]model.MemberEvent, error)
+	GetSegmentsHistory(year, month int) ([]model.MemberEvent, error)
 	UpdateSegments(userId string, segmentsToAdd []model.SegmentToAdd, segmentSlugsToDelete []string) error
+}
+
+type History interface {
+	SaveEvents([]model.MemberEvent) (string, error)
+	UploadEvents(fileName string, dest io.Writer) (int, error)
 }
 
 var (
@@ -33,11 +39,13 @@ type Segment interface {
 type Repository struct {
 	User
 	Segment
+	History
 }
 
-func NewRepository(db *sqlx.DB) *Repository {
+func NewRepository(db *sqlx.DB, fileStoragePath string) *Repository {
 	return &Repository{
 		User:    NewUserPostgres(db),
 		Segment: NewSegmentPostgres(db),
+		History: NewHistoryCSV(fileStoragePath),
 	}
 }

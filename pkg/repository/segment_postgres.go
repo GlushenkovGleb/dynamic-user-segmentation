@@ -5,7 +5,7 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-const detetedStatus = "DELETED"
+const deletedStatus = "DELETED"
 
 const insertSegmentQuery = "INSERT INTO segments(slug, percentage, is_auto) VALUES ($1, $2, $3) RETURNING id"
 
@@ -70,7 +70,7 @@ func (s *SegmentPostgres) DeleteSegment(slug string) (int, error) {
 
 	// Сохраняем записи об участии в историю
 	for i := range deleteEvents {
-		deleteEvents[i].Status = detetedStatus
+		deleteEvents[i].Status = deletedStatus
 	}
 	if len(deleteEvents) > 0 {
 		_, err = tx.NamedExec(insertDeleteEventsQuery, deleteEvents)

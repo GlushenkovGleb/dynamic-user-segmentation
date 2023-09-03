@@ -1,5 +1,5 @@
 env: "local"
-storage-path: "./storage.db"
+file-storage-path: "./files/history"
 http-server:
   address: "localhost:8082"
   timeout: 4s

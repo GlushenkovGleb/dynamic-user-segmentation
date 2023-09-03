@@ -8,11 +8,16 @@ import (
 	"github.com/go-chi/render"
 	"io"
 	"net/http"
+	"strconv"
 )
 
 type UpdateSegmentsRequest struct {
 	SegmentsToAdd []model.SegmentToAdd `json:"segments_to_add,omitempty"`
 	SlugsToDelete []string             `json:"slugs_to_delete,omitempty"`
+}
+
+type LinkResponse struct {
+	Link string `json:"link"`
 }
 
 func (c *Controller) getUserSegments(w http.ResponseWriter, r *http.Request) {
@@ -30,7 +35,34 @@ func (c *Controller) getUserSegments(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) getSegmentsHistory(w http.ResponseWriter, r *http.Request) {
+	log := c.log
+	// получаем год и месяц
+	yearStr := chi.URLParam(r, "year")
+	monthStr := chi.URLParam(r, "month")
+	year, err := strconv.Atoi(yearStr)
+	if err != nil {
+		log.Error(fmt.Sprintf("Could not parse year to int got '%s'", yearStr))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	month, err := strconv.Atoi(monthStr)
+	if err != nil {
+		log.Error(fmt.Sprintf("Could not parse month to int got '%s'", monthStr))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
+	// получаем события за месяц
+	fileName, err := c.services.GetSegmentsHistory(year, month)
+	if err != nil {
+		log.Error(fmt.Sprintf("Getting segments failed: %s", err))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	link := "localhost:8082/api/public/v1/history/files/" + fileName
+	resp := LinkResponse{Link: link}
+
+	render.JSON(w, r, resp)
 }
 
 func (c *Controller) updateUserSegments(w http.ResponseWriter, r *http.Request) {

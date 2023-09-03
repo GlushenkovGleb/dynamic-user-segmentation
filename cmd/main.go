@@ -38,7 +38,7 @@ func main() {
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.URLFormat)
 
-	repos := repository.NewRepository(db)
+	repos := repository.NewRepository(db, cfg.FileStoragePath)
 	services := service.NewService(repos)
 	controllers := controller.NewController(services, log)
 	controllers.InitRoutes(router)
