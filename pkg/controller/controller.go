@@ -1,32 +1,33 @@
 package controller
 
 import (
-	"dynamic-user-segmentation/pkg/service"
-	"github.com/go-chi/chi/v5"
 	"log/slog"
+
+	"dynamic-user-segmentation/pkg/repository"
+	"github.com/go-chi/chi/v5"
 )
 
 type Controller struct {
-	services *service.Service
-	log      *slog.Logger
+	repo *repository.Repository
+	log  *slog.Logger
 }
 
-func NewController(services *service.Service, log *slog.Logger) *Controller {
-	return &Controller{services: services, log: log}
+func NewController(repo *repository.Repository, log *slog.Logger) *Controller {
+	return &Controller{repo: repo, log: log}
 }
 
 func (c *Controller) InitRoutes(r *chi.Mux) {
-	r.Route("/api/public/v1", func(r chi.Router) {
-		// пользователи
-		r.Get("/users/{user_id}/segments", c.getUserSegments)
-		r.Get("/users/history/{year}-{month}", c.getSegmentsHistory)
-		r.Put("/users/{user_id}/segments", c.updateUserSegments)
+	// группы
+	r.Post("/groups", c.CreateGroup)
+	r.Get("/groups", c.GetGroups)
+	r.Get("/groups/{group_id}", c.GetGroup)
+	r.Put("/groups/{group_id}", c.UpdateGroup)
+	r.Delete("/groups/{group_id}", c.DeleteGroup)
 
-		// сегменты
-		r.Post("/segments", c.createSegment)
-		r.Delete("/segments/{slug}", c.deleteSegment)
-
-		// история
-		r.Get("/history/files/{file_name}", c.uploadHistory)
-	})
+	// студенты
+	r.Post("/students", c.CreateStudent)
+	r.Get("/students", c.GetStudents)
+	r.Get("/students/{student_id}", c.GetStudent)
+	r.Put("/students", c.UpdateStudent)
+	r.Delete("/students/{student_id}", c.DeleteStudent)
 }

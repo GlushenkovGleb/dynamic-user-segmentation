@@ -1,16 +1,16 @@
 package main
 
 import (
-	"dynamic-user-segmentation/pkg/config"
-	"dynamic-user-segmentation/pkg/controller"
-	"dynamic-user-segmentation/pkg/repository"
-	"dynamic-user-segmentation/pkg/service"
 	"fmt"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"log/slog"
 	"net/http"
 	"os"
+
+	"dynamic-user-segmentation/pkg/config"
+	"dynamic-user-segmentation/pkg/controller"
+	"dynamic-user-segmentation/pkg/repository"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 const (
@@ -26,21 +26,19 @@ func main() {
 		slog.String("env", cfg.Env),
 	)
 
-	db, err := repository.NewPostgresDB(log)
-	if err != nil {
-		log.Error(fmt.Sprintf("%s", err))
-		os.Exit(1)
-	}
-
 	router := chi.NewRouter()
 	router.Use(middleware.RequestID)
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.URLFormat)
 
-	repos := repository.NewRepository(db, cfg.FileStoragePath)
-	services := service.NewService(repos)
-	controllers := controller.NewController(services, log)
+	db, err := repository.NewDB()
+	if err != nil {
+		log.Error(fmt.Sprintf("%s", err))
+	}
+
+	repo := repository.NewRepository(db)
+	controllers := controller.NewController(repo, log)
 	controllers.InitRoutes(router)
 
 	srv := &http.Server{

@@ -1,0 +1,262 @@
+openapi: 3.0.0
+info:
+title: Students and Groups API
+version: 1.0.0
+servers:
+- url: http://api.example.com/v1
+  tags:
+- name: Students
+  description: Student management
+- name: Groups
+  description: Academic groups management
+
+paths:
+/students:
+post:
+tags: [Students]
+summary: Create a new student
+requestBody:
+required: true
+content:
+application/json:
+schema:
+$ref: '#/components/schemas/StudentCreate'
+responses:
+'201':
+description: Student created
+content:
+application/json:
+schema:
+$ref: '#/components/schemas/StudentResponse'
+
+    get:
+      tags: [Students]
+      summary: Get all students
+      parameters:
+        - in: query
+          name: query
+          schema:
+            type: string
+          description: Search query in name or group name
+      responses:
+        '200':
+          description: List of students
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StudentResponse'
+
+/students/{id}:
+get:
+tags: [Students]
+summary: Get student by ID
+parameters:
+- in: path
+name: id
+required: true
+schema:
+type: integer
+responses:
+'200':
+description: Student details
+content:
+application/json:
+schema:
+$ref: '#/components/schemas/StudentResponse'
+
+    put:
+      tags: [Students]
+      summary: Update student
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudentUpdate'
+      responses:
+        '200':
+          description: Student updated
+    
+    delete:
+      tags: [Students]
+      summary: Delete student
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Student deleted
+
+/groups:
+post:
+tags: [Groups]
+summary: Create new group
+requestBody:
+required: true
+content:
+application/json:
+schema:
+$ref: '#/components/schemas/GroupCreate'
+responses:
+'201':
+description: Group created
+content:
+application/json:
+schema:
+$ref: '#/components/schemas/GroupResponse'
+
+    get:
+      tags: [Groups]
+      summary: Get all groups
+      parameters:
+        - in: query
+          name: query
+          schema:
+            type: string
+          description: Search query in group name
+      responses:
+        '200':
+          description: List of groups
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GroupTreeResponse'
+
+/groups/{id}:
+get:
+tags: [Groups]
+summary: Get group by ID
+parameters:
+- in: path
+name: id
+required: true
+schema:
+type: integer
+responses:
+'200':
+description: Group details
+content:
+application/json:
+schema:
+$ref: '#/components/schemas/GroupResponse'
+
+    put:
+      tags: [Groups]
+      summary: Update group
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupUpdate'
+      responses:
+        '200':
+          description: Group updated
+    
+    delete:
+      tags: [Groups]
+      summary: Delete group
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Group deleted
+        '400':
+          description: Cannot delete group with subgroups
+
+components:
+schemas:
+StudentCreate:
+type: object
+required: [name, email, group_id]
+properties:
+name:
+type: string
+email:
+type: string
+format: email
+group_id:
+type: integer
+
+    StudentResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        group_id:
+          type: integer
+
+    StudentUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        group_id:
+          type: integer
+
+    GroupCreate:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        parent_id:
+          type: integer
+          nullable: true
+
+    GroupResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        parent_id:
+          type: integer
+          nullable: true
+
+    GroupTreeResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        subGroups:
+          type: array
+          items:
+            $ref: '#/components/schemas/GroupTreeResponse'
+
+    GroupUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        parent_id:
+          type: integer
+          nullable: true

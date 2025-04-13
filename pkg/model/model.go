@@ -1,25 +1,37 @@
 package model
 
-import "time"
-
-type MemberEvent struct {
-	UserId     string    `db:"user_id"`
-	Slug       string    `db:"slug"`
-	Status     string    `db:"status"`
-	HappenedAt time.Time `db:"happened_at"`
+type Group struct {
+	ID       int    `gorm:"id"`
+	ParentID *int   `gorm:"parent_id"`
+	Name     string `gorm:"name"`
 }
 
-type SegmentToAdd struct {
-	Slug         string `json:"slug"`
-	TttInSeconds int    `json:"ttl_in_seconds,omitempty" validate:"gte=0"`
+func (Group) TableName() string {
+	return "groups"
 }
 
-type Segment struct {
-	Slug       string  `json:"slug" validate:"required"`
-	Percentage float64 `json:"percentage,omitempty"`
-	IsAuto     bool    `json:"is_auto,omitempty"`
+type GroupWithStudent struct {
+	GroupID   int `gorm:"group_id"`
+	StudentID int `gorm:"student_id"`
 }
 
-type UserSegments struct {
-	Slugs []string `json:"slugs"`
+func (GroupWithStudent) TableName() string {
+	return "group_with_student"
+}
+
+type Student struct {
+	ID      int    `gorm:"id"`
+	Name    string `gorm:"name"`
+	Email   string `gorm:"email"`
+	GroupID int    `gorm:"group_id"`
+}
+
+func (Student) TableName() string {
+	return "students"
+}
+
+type GroupFull struct {
+	GroupID   int         `json:"group_id"`
+	SubGroups []GroupFull `json:"subGroups"`
+	Name      string      `json:"name"`
 }
